@@ -1,10 +1,8 @@
-name: cars
+name: base
 channels:
   - defaults
 dependencies:
   - plotly
   - matplotlib
   - pyspark
-  - python
-  - jupyter
-prefix: /opt/anaconda3/envs/cars
+prefix: /opt/anaconda3/envs/base

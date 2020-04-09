@@ -8,7 +8,9 @@
 # --------------------------------------------------------------------------------------
 
 # Pull the base image
-FROM continuumio/miniconda3
+ARG BASE_IMAGE=jupyter/minimal-notebook:dc9744740e12@sha256:0dc8e7bd46d7dbf27c255178ef2d92bb8ca888d32776204d19b5c23f741c1414
+ARG ROOT_IMAGE=${BASE_IMAGE}
+FROM ${BASE_IMAGE}
 
 # Specify the image maintainer
 LABEL maintainer="Nikkolas Irwin <nikkolasjirwin@nevada.unr.edu>, \
@@ -16,24 +18,18 @@ Brianna Blain-Castelli <bblaincastelli@unr.edu>, \
 Andrew Munoz <amunoz24@nevada.unr.edu>, \
 Adam Cassell <a.t.cassell@gmail.com>"
 
-# Set the working directory for the rest of the instructions in the file
-WORKDIR /app
+ENV CONDA_DEFAULT_ENV base
 
-# Copy 'environment.yml' from the build context
-COPY environment.yml .
+RUN conda install --yes --name base \
+    matplotlib \
+    plotly \
+    pyspark && \
+    conda clean --all --force-pkgs-dirs --yes
 
-# Create the conda environment and activate the environment
-RUN conda update -y -n base -c defaults conda && \
-    conda env create --file environment.yml
+# Set-up font cache for matplotlib by importing for the first time
+# XDG_CACHE_HOME defines the base directory relative to which user specific non-essential data files should be stored.
+ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
+# RUN MPLBACKEND=Agg python -c "import matplotlib.py" && \
+#     fix-permissions /home/$NB_USER
 
-# Make RUN commands use the new environment:
-SHELL ["conda", "run", "-n", "cars", "-v", "/bin/bash", "-c"]
-
-# Set environmental variables
-ENV PATH /opt/conda/envs/cars/bin:$PATH
-ENV CONDA_DEFAULT_ENV cars
-
-# Copy the application from the build context
-COPY . .
-
-CMD ["python"]
+USER ${NB_UID}
