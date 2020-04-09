@@ -1,0 +1,10 @@
+name: cars
+channels:
+  - defaults
+dependencies:
+  - plotly
+  - matplotlib
+  - pyspark
+  - python
+  - jupyter
+prefix: /opt/anaconda3/envs/cars
