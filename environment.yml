@@ -1,6 +1,49 @@
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+# Containerized Amazon Recommender System (CARS) Project:
+#
+#   Authors: Brianna Blain-Castelli, Nikkolas Irwin, Adam Cassell, and Andrew Munoz
+#   Date: 04/01/2020
+#   Purpose: Build a Big Data application using a Conda environment and Docker.
+#   Course: CS 636 Big Data Systems
+#   Project: CARS is an application that builds a recommender system from datasets provided by
+#            UCSD (see citation below). 
+#
+#   Dataset URL: https://nijianmo.github.io/amazon/index.html
+#
+#   ***IMPORTANT*** You must download the dataset files for a particular category to your local machine yourself due
+#                   to their size. As long as your dataset files are in the same directory as the Dockerfile, then
+#                   they will be added to the volume and usable by the container as expected.
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#   Citation: Justifying recommendations using distantly-labeled reviews and fined-grained aspects
+#             Jianmo Ni, Jiacheng Li, Julian McAuley
+#             Empirical Methods in Natural Language Processing (EMNLP), 2019
+#             PDF: http://cseweb.ucsd.edu/~jmcauley/pdfs/emnlp19a.pdf
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#
+#   Conda Environmental File: This file specifies our Conda environment for the Docker container.
+#
+#   Top-Level Keys Explained:
+#     1. name - Specifies the name of the Conda environment we will use for the containerized application. For our
+#               purposes, it it set to base, which is the default environment that is supplied when installing Conda.
+#
+#     2. channels - Specifies the locations where packages are stored that we will install dependencies from.
+#
+#     3. dependencies - Specifies the explicit dependencies that must be installed when the conda environment is 
+#                       created for our application.
+#
+#     4. prefix - Specifies the target directory for creating the environment (for our purposes this is in the
+#                 container, but it could also be on the local file system.).
+#
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 name: base
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - plotly
   - matplotlib
