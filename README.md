@@ -110,4 +110,4 @@ Follow the steps **in order** to build the application and deploy the Jupyter No
 
 ### DockerHub Image
 
-The latest version of the CARS image can be found [here](https://hub.docker.com/repository/docker/nikkirwin/cars)
+The latest version of the CARS image can be found [here](https://hub.docker.com/repository/docker/nikkirwin/cars).
