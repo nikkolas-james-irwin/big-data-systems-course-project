@@ -107,3 +107,7 @@ Follow the steps **in order** to build the application and deploy the Jupyter No
     ```docker
     docker container exec -it cars_container jupyter notebook list
     ```
+
+### DockerHub Image
+
+The latest version of the CARS image can be found [here](https://hub.docker.com/repository/docker/nikkirwin/cars)
