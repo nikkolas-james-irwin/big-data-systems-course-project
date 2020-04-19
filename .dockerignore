@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-# Containerized Amazon Recommender System (CARS) Project:
+#   Containerized Amazon Recommender System (CARS) Project:
 #
 #   Authors: Brianna Blain-Castelli, Nikkolas Irwin, Adam Cassell, and Andrew Munoz
 #   Date: 04/01/2020
