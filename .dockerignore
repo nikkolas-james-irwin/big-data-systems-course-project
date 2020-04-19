@@ -23,29 +23,10 @@
 #             PDF: http://cseweb.ucsd.edu/~jmcauley/pdfs/emnlp19a.pdf
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#
-#   Conda Environmental File: This file specifies our Conda environment for the Docker container.
-#
-#   Top-Level Keys Explained:
-#     1. name - Specifies the name of the Conda environment we will use for the containerized application. For our
-#               purposes, it it set to base, which is the default environment that is supplied when installing Conda.
-#
-#     2. channels - Specifies the locations where packages are stored that we will install dependencies from.
-#
-#     3. dependencies - Specifies the explicit dependencies that must be installed when the conda environment is 
-#                       created for our application.
-#
-#     4. prefix - Specifies the target directory for creating the environment (for our purposes this is in the
-#                 container, but it could also be on the local file system.).
-#
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-name: base
-channels:
-  - defaults
-  - conda-forge
-dependencies:
-  - plotly
-  - matplotlib
-  - pyspark
-prefix: /opt/anaconda3/envs/base
+# Prevent these files from being added to the build context by Docker since they do not need to exist in the 
+# containers volume.
+.gitignore
+environment.yml
+Dockerfile
+README.md
