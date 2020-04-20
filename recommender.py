@@ -24,7 +24,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
-#   Python Recommender File: Python file for driving the core recommender system logic for CARS.
+#   Python Recommender File: Python file for driving the core recommender system logic for CARS, using the ALS algorithm.
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
