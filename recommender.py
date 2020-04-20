@@ -40,7 +40,7 @@ from pyspark.sql.functions import col
 
 spark = SparkSession.builder.appName('Recommendation_system').getOrCreate()
 
-df = spark.read.json("Musical_Instruments_5.json")
+df = spark.read.json("Video_Games_5.json")
 df.show(100,truncate=True)
 
 nd=df.select(df['asin'],df['overall'],df['reviewerID'])
@@ -53,13 +53,13 @@ transformed.show()
 
 (training,test)=transformed.randomSplit([0.8, 0.2])
 
-als=ALS(maxIter=5, \
-        regParam=0.09, \ 
-        rank=25, \
-        userCol="reviewerID_index", \
-        itemCol="asin_index", \
-        ratingCol="overall", \
-        coldStartStrategy="drop", \
+als=ALS(maxIter=5,
+        regParam=0.09, 
+        rank=25,
+        userCol="reviewerID_index",
+        itemCol="asin_index",
+        ratingCol="overall",
+        coldStartStrategy="drop",
         nonnegative=True)
 model=als.fit(training)
 
