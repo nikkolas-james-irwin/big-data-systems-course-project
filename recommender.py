@@ -28,7 +28,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-import os, re, sys, webbrowser
+import argparse, os, re, sys, textwrap as tw, webbrowser
 from sys import platform
 from pyspark import SparkContext
 from pyspark.sql.functions import rand
@@ -211,9 +211,66 @@ def execute_recommender_system():
         print(execution_err)
         sys.exit('\nExiting the program due to an unexpected error. The details are shown above.')
 
+# Initialize Parser
+def init_argparser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+                        prog="cars",
+                        usage="recommender.py",
+                        description="Runs a recommender system using the PySpark API and ALS algorithm.",
+                        )
+
+    workers = os.cpu_count()
+    cores = list(range(1, workers))
+    cores_min = cores[0]
+    cores_max = cores[len(cores) -1]
+    
+    parser.add_argument("-c", "--cores",
+                        choices=range(1, workers),
+                        default=1,
+                        type=int,
+                        help="specify the logical core count for the Spark Context",
+                        metavar="[{0}-{1}]".format(cores_min, cores_max),
+                        )
+    
+    parser.add_argument("-f", "--file",
+                        help=str(os.listdir('datasets')).lstrip('[').rstrip(']'),
+                        metavar="<filename>.json",
+                        )
+    
+    parser.add_argument("-l", "--log-file",
+                        help="Save output to log",
+                        metavar="/path/to/<filename>.log",
+                        )
+    
+    parser.add_argument("-o", "--offline",
+                        action="store_false",
+                        help="turn off Spark UI",
+                        )                       
+    
+    parser.add_argument("-s", "--show-visualizations",
+                        action="store_true",
+                        help="turn on data visualizations",
+                        )
+    
+    parser.add_argument("-v", "--verbose",
+                        action="store_true",
+                        help="enable verbose command line output for intermediate spark jobs",
+                        )
+
+    parser.add_argument("--version",
+                        action="version",
+                        version="%(prog)s 1.0.0",
+                        help="displays the current version of %(prog)s",
+                        )
+    
+    return parser
+
 
 try:  # Run the program only if this module is set properly by the interpreter as the entry point of our program.
     if __name__ == '__main__':
+        # Execute the command line parser.
+        parser = init_argparser()
+        parser.parse_args()
         print('\n\nNo exceptions were raised.')
     else:  # If this module is imported raise/throw an ImportError.
         raise ImportError
@@ -221,7 +278,8 @@ except ImportError:  # If an ImportError is thrown exit the program immediately.
     sys.exit('Import Error: recommender.py must be run directly, not imported.')
 except Exception as err:  # Print any other exception that causes the program to not start successfully.
     print(err)
-else:  # Call the main function if no exceptions were raised
+else:  # Call the main function if no exceptions were raised    
+    # After getting command line arguments, execute the application if no errors occur.
     print('\n\nStarting the program.')
     execute_recommender_system()
     print('\nExiting the program.')
