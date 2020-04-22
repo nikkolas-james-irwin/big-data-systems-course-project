@@ -91,7 +91,7 @@ Follow the steps **in order** to build the application and deploy the Jupyter No
 4. Create the Docker container and mount the volume to ensure that work performed is saved regardless of the lifecycle/state of the container.
 
     ```docker
-    docker container run -d -p 8888:8888 -it --name cars_container --mount source=cars_local_volume,target=/home/jovyan/work cars
+    docker container run -d -p 8888:8888 -p 4040:4040 -it --name cars_container --mount source=cars_local_volume,target=/home/jovyan/work cars
     ```
 
 5. Verify that the volume was initialized successfully.
