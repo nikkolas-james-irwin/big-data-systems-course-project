@@ -57,22 +57,26 @@ elif platform == "win32":
 
 
 def welcome_message():
-    print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!\n\n')
+    print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!')
 
 
-def select_dataset():
-    dataset_directory = os.listdir(path='datasets')
-    files = dataset_directory
-    if platform == "darwin":
-        files.remove('.DS_Store')
+def select_dataset(file=None):
+    if file is None:
+        dataset_directory = os.listdir(path='datasets')
+        files = dataset_directory
+        if platform == "darwin":
+            files.remove('.DS_Store')
 
-    file_count = 1
-    print(f'\nSelect a dataset to run from {file_count} files listed below.\n\n')
-    for file in files:
-        print('File', str(file_count).zfill(2), '-', file)
-        file_count += 1
+        file_count = 1
+        print(f'\n\nSelect a dataset to run from {file_count} files listed below.\n\n')
+        for file in files:
+            print('File', str(file_count).zfill(2), '-', file)
+            file_count += 1
 
-    dataset = str(input('\n\nDataset: '))
+        dataset = str(input('\n\nDataset: '))
+    else:
+        dataset = file
+        
     if dataset.endswith('.json'):
         print(f'\n\nRunning CARS using the {dataset} dataset...\n')
     else:
@@ -183,30 +187,34 @@ def run_spark_jobs(dataset=None, spark=None):
     print('\n...done!')
 
 
-def exit_message(sc=None):
-    run_the_program = True
-
-    while run_the_program:
+def exit_message(sc=None, browser_on=False):
+    
+    while browser_on:
         choice = input('\n\nShutdown the program? [\'y\' for yes, \'n\' for no]: ')
         if choice == str('y').lower():
-            run_the_program = False
-            print('\n\nStopping the Spark Context...\n')
-            sc.stop()
-            print('\n...done!\n')
+            browser_on = False
         else:
             continue
 
+    print('\n\nStopping the Spark Context...\n')
+    sc.stop()
+    print('\n...done!\n')
 
-def execute_recommender_system():
+
+def execute_recommender_system(command_line_arguments=None):
     try:  # Attempt to run the recommender system and associated startup methods.
         welcome_message()
-        amazon_dataset = select_dataset()
-        logical_cores = configure_core_count()
+        amazon_dataset = select_dataset(command_line_arguments.file)
+        logical_cores = None
+        if command_line_arguments.cores is None:
+            logical_cores = configure_core_count()
+        else:
+            logical_cores = command_line_arguments.cores
         spark_context = initialize_spark_context(cores_allocated=logical_cores)
         spark_session = initialize_spark_session()
         activate_spark_application_ui()
         run_spark_jobs(dataset=amazon_dataset, spark=spark_session)
-        exit_message(sc=spark_context)
+        exit_message(sc=spark_context, browser_on=command_line_arguments.online)
     except Exception as execution_err:  # Catch any error type, print the error, and exit the program.
         print(execution_err)
         sys.exit('\nExiting the program due to an unexpected error. The details are shown above.')
@@ -220,12 +228,12 @@ def init_argparser() -> argparse.ArgumentParser:
                         )
 
     workers = os.cpu_count()
-    cores = list(range(1, workers))
+    cores = range(1, workers + 1)
     cores_min = cores[0]
-    cores_max = cores[len(cores) -1]
+    cores_max = len(cores)
     
     parser.add_argument("-c", "--cores",
-                        choices=range(1, workers),
+                        choices=range(1, (cores_max + 1)),
                         default=1,
                         type=int,
                         help="specify the logical core count for the Spark Context",
@@ -242,9 +250,9 @@ def init_argparser() -> argparse.ArgumentParser:
                         metavar="/path/to/<filename>.log",
                         )
     
-    parser.add_argument("-o", "--offline",
-                        action="store_false",
-                        help="turn off Spark UI",
+    parser.add_argument("-o", "--online",
+                        action="store_true",
+                        help="turn on Spark UI",
                         )                       
     
     parser.add_argument("-s", "--show-visualizations",
@@ -270,7 +278,7 @@ try:  # Run the program only if this module is set properly by the interpreter a
     if __name__ == '__main__':
         # Execute the command line parser.
         parser = init_argparser()
-        parser.parse_args()
+        args = parser.parse_args()
         print('\n\nNo exceptions were raised.')
     else:  # If this module is imported raise/throw an ImportError.
         raise ImportError
@@ -281,5 +289,5 @@ except Exception as err:  # Print any other exception that causes the program to
 else:  # Call the main function if no exceptions were raised    
     # After getting command line arguments, execute the application if no errors occur.
     print('\n\nStarting the program.')
-    execute_recommender_system()
+    execute_recommender_system(command_line_arguments=args)
     print('\nExiting the program.')
