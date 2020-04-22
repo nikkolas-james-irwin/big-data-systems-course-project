@@ -1,3 +1,5 @@
+# /usr/bin/env python3
+
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   Containerized Amazon Recommender System (CARS) Project
@@ -44,16 +46,17 @@ if platform == "linux" or platform == "linux2":
     # Linux
     # Set the Java PATH for JAVA_HOME so that PySpark can utilize the SDK.
     os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME',
-                                             '/usr/lib/jvm/java-8-openjdk-amd64')
+                                             default='/usr/lib/jvm/java-8-openjdk-amd64')
     os.environ['PYSPARK_SUBMIT_ARGS'] = f'--master local[2] pyspark-shell'
 elif platform == "darwin":
     # OS X
     # Set the Java PATH for JAVA_HOME so that PySpark can utilize the SDK.
     os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME',
-                                             '/Library/Java/JavaVirtualMachines/jdk1.8.0_221.jdk/Contents/Home')
+                                             default='/Library/Java/JavaVirtualMachines/jdk1.8.0_221.jdk/Contents/Home')
     os.environ['PYSPARK_SUBMIT_ARGS'] = f'--master local[2] pyspark-shell'
 elif platform == "win32":
-    os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME', 'C:\\Program Files\\Java\\jdk1.8.0_121')
+    os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME', 
+                                             default='C:\\Program Files\\Java\\jdk1.8.0_121')
 
 
 def welcome_message():
@@ -221,12 +224,16 @@ def execute_recommender_system(command_line_arguments=None):
 
 # Initialize Parser
 def init_argparser() -> argparse.ArgumentParser:
+    formatter = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=140, width=150)
+    
     parser = argparse.ArgumentParser(
+                        formatter_class=formatter,
                         prog="cars",
                         usage="recommender.py",
-                        description="Runs a recommender system using the PySpark API and ALS algorithm.",
+                        description="cars is a application that runs a recommender system in a containerized environment.",
                         )
 
+    # Get core count on host machine or Docker container
     workers = os.cpu_count()
     cores = range(1, workers + 1)
     cores_min = cores[0]
@@ -240,13 +247,26 @@ def init_argparser() -> argparse.ArgumentParser:
                         metavar="[{0}-{1}]".format(cores_min, cores_max),
                         )
     
+    # Remove Mac OS .DS_Store File
+    dataset_directory = os.listdir(path='datasets')
+    files = dataset_directory
+    if platform == "darwin":
+            files.remove('.DS_Store')
+    
+    # Remove the brackets, pair of single quotes, and comma from all files.
+    # Add a newline character at the end of each file
+    # Create a line of text between each file, the help message, and the next option
+    filestring = 'available files are shown below\n' + \
+                 '-' * 31 + '\n' + '\n'.join(files) + '\n' + \
+                 '-' * 31 + '\n'
+    
     parser.add_argument("-f", "--file",
-                        help=str(os.listdir('datasets')).lstrip('[').rstrip(']'),
+                        help=filestring,
                         metavar="<filename>.json",
                         )
     
     parser.add_argument("-l", "--log-file",
-                        help="Save output to log",
+                        help="save output to log",
                         metavar="/path/to/<filename>.log",
                         )
     
