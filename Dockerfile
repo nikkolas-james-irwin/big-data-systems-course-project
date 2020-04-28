@@ -98,3 +98,6 @@ VOLUME /home/jovyan/work
 
 # Copy the dataset files from the current directory into the volume
 COPY . /home/jovyan/work
+
+# Expose port 4040 for the PySpark Application UI
+EXPOSE 4040

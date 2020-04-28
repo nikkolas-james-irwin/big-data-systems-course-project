@@ -1,3 +1,5 @@
+# /usr/bin/env python3
+
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
 #   Containerized Amazon Recommender System (CARS) Project
@@ -28,7 +30,7 @@
 #
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-import os, re, sys, webbrowser
+import argparse, os, re, sys, textwrap as tw, webbrowser
 from sys import platform
 from pyspark import SparkContext
 from pyspark.sql.functions import rand
@@ -44,35 +46,40 @@ if platform == "linux" or platform == "linux2":
     # Linux
     # Set the Java PATH for JAVA_HOME so that PySpark can utilize the SDK.
     os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME',
-                                             '/usr/lib/jvm/java-8-openjdk-amd64')
+                                             default='/usr/lib/jvm/java-8-openjdk-amd64')
     os.environ['PYSPARK_SUBMIT_ARGS'] = f'--master local[2] pyspark-shell'
 elif platform == "darwin":
     # OS X
     # Set the Java PATH for JAVA_HOME so that PySpark can utilize the SDK.
     os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME',
-                                             '/Library/Java/JavaVirtualMachines/jdk1.8.0_221.jdk/Contents/Home')
+                                             default='/Library/Java/JavaVirtualMachines/jdk1.8.0_221.jdk/Contents/Home')
     os.environ['PYSPARK_SUBMIT_ARGS'] = f'--master local[2] pyspark-shell'
 elif platform == "win32":
-    os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME', 'C:\\Program Files\\Java\\jdk1.8.0_121')
+    os.environ['JAVA_HOME'] = os.environ.get('JAVA_HOME', 
+                                             default='C:\\Program Files\\Java\\jdk1.8.0_121')
 
 
 def welcome_message():
-    print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!\n\n')
+    print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!')
 
 
-def select_dataset():
-    dataset_directory = os.listdir(path='datasets')
-    files = dataset_directory
-    if platform == "darwin":
-        files.remove('.DS_Store')
+def select_dataset(file=None):
+    if file is None:
+        dataset_directory = os.listdir(path='datasets')
+        files = dataset_directory
+        if platform == "darwin":
+            files.remove('.DS_Store')
 
-    file_count = 1
-    print(f'\nSelect a dataset to run from {file_count} files listed below.\n\n')
-    for file in files:
-        print('File', str(file_count).zfill(2), '-', file)
-        file_count += 1
+        file_count = 1
+        print(f'\n\nSelect a dataset to run from {file_count} files listed below.\n\n')
+        for file in files:
+            print('File', str(file_count).zfill(2), '-', file)
+            file_count += 1
 
-    dataset = str(input('\n\nDataset: '))
+        dataset = str(input('\n\nDataset: '))
+    else:
+        dataset = file
+        
     if dataset.endswith('.json'):
         print(f'\n\nRunning CARS using the {dataset} dataset...\n')
     else:
@@ -183,37 +190,115 @@ def run_spark_jobs(dataset=None, spark=None):
     print('\n...done!')
 
 
-def exit_message(sc=None):
-    run_the_program = True
-
-    while run_the_program:
+def exit_message(sc=None, browser_on=False):
+    
+    while browser_on:
         choice = input('\n\nShutdown the program? [\'y\' for yes, \'n\' for no]: ')
         if choice == str('y').lower():
-            run_the_program = False
-            print('\n\nStopping the Spark Context...\n')
-            sc.stop()
-            print('\n...done!\n')
+            browser_on = False
         else:
             continue
 
+    print('\n\nStopping the Spark Context...\n')
+    sc.stop()
+    print('\n...done!\n')
 
-def execute_recommender_system():
+
+def execute_recommender_system(command_line_arguments=None):
     try:  # Attempt to run the recommender system and associated startup methods.
         welcome_message()
-        amazon_dataset = select_dataset()
-        logical_cores = configure_core_count()
+        amazon_dataset = select_dataset(command_line_arguments.file)
+        logical_cores = None
+        if command_line_arguments.cores is None:
+            logical_cores = configure_core_count()
+        else:
+            logical_cores = command_line_arguments.cores
         spark_context = initialize_spark_context(cores_allocated=logical_cores)
         spark_session = initialize_spark_session()
         activate_spark_application_ui()
         run_spark_jobs(dataset=amazon_dataset, spark=spark_session)
-        exit_message(sc=spark_context)
+        exit_message(sc=spark_context, browser_on=command_line_arguments.online)
     except Exception as execution_err:  # Catch any error type, print the error, and exit the program.
         print(execution_err)
         sys.exit('\nExiting the program due to an unexpected error. The details are shown above.')
 
+# Initialize Parser
+def init_argparser() -> argparse.ArgumentParser:
+    formatter = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=140, width=150)
+    
+    parser = argparse.ArgumentParser(
+                        formatter_class=formatter,
+                        prog="cars",
+                        usage="recommender.py",
+                        description="cars is a application that runs a recommender system in a containerized environment.",
+                        )
+
+    # Get core count on host machine or Docker container
+    workers = os.cpu_count()
+    cores = range(1, workers + 1)
+    cores_min = cores[0]
+    cores_max = len(cores)
+    
+    parser.add_argument("-c", "--cores",
+                        choices=range(1, (cores_max + 1)),
+                        default=1,
+                        type=int,
+                        help="specify the logical core count for the Spark Context",
+                        metavar="[{0}-{1}]".format(cores_min, cores_max),
+                        )
+    
+    # Remove Mac OS .DS_Store File
+    dataset_directory = os.listdir(path='datasets')
+    files = dataset_directory
+    if platform == "darwin":
+            files.remove('.DS_Store')
+    
+    # Remove the brackets, pair of single quotes, and comma from all files.
+    # Add a newline character at the end of each file
+    # Create a line of text between each file, the help message, and the next option
+    filestring = 'available files are shown below\n' + \
+                 '-' * 31 + '\n' + '\n'.join(files) + '\n' + \
+                 '-' * 31 + '\n'
+    
+    parser.add_argument("-f", "--file",
+                        help=filestring,
+                        metavar="<filename>.json",
+                        )
+    
+    parser.add_argument("-l", "--log-file",
+                        help="save output to log",
+                        metavar="/path/to/<filename>.log",
+                        )
+    
+    parser.add_argument("-o", "--online",
+                        action="store_true",
+                        help="turn on Spark UI",
+                        )                       
+    
+    parser.add_argument("-s", "--show-visualizations",
+                        action="store_true",
+                        help="turn on data visualizations",
+                        )
+    
+    parser.add_argument("-v", "--verbose",
+                        action="store_true",
+                        help="enable verbose command line output for intermediate spark jobs",
+                        )
+
+    parser.add_argument("--version",
+                        action="version",
+                        version="%(prog)s 1.0.0",
+                        help="displays the current version of %(prog)s",
+                        )
+    
+    return parser
+
 
 try:  # Run the program only if this module is set properly by the interpreter as the entry point of our program.
     if __name__ == '__main__':
+        # Execute the command line parser.
+        parser = init_argparser()
+        args = parser.parse_args()
         print('\n\nNo exceptions were raised.')
     else:  # If this module is imported raise/throw an ImportError.
         raise ImportError
@@ -221,7 +306,8 @@ except ImportError:  # If an ImportError is thrown exit the program immediately.
     sys.exit('Import Error: recommender.py must be run directly, not imported.')
 except Exception as err:  # Print any other exception that causes the program to not start successfully.
     print(err)
-else:  # Call the main function if no exceptions were raised
+else:  # Call the main function if no exceptions were raised    
+    # After getting command line arguments, execute the application if no errors occur.
     print('\n\nStarting the program.')
-    execute_recommender_system()
+    execute_recommender_system(command_line_arguments=args)
     print('\nExiting the program.')
