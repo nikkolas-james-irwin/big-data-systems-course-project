@@ -111,6 +111,19 @@ Follow the steps **in order** to build the application and deploy the Jupyter No
     docker container exec -it cars_container jupyter notebook list
     ```
 
+8. Copy data sets from local machine to cars container (from outside the container).
+    
+    ```docker
+    docker cp <dataset_file.json> cars_container:/home/jovyan/work/
+    ```
+
+9. Run the program via the command line.
+
+    ```python
+    python recommender.py <optional arguments>
+    ```
+
+
 ### DockerHub Image
 
 The latest version of the CARS image can be found [here](https://hub.docker.com/repository/docker/nikkirwin/cars). You can pull the image by running the following command.
