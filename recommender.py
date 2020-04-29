@@ -39,6 +39,10 @@ from pyspark.ml.recommendation import ALS
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import StringIndexer
 from pyspark.ml import Pipeline
+import pandas
+from IPython.display import display
+import matplotlib.pyplot as plt
+import vis
 
 
 # Set the environment
@@ -138,7 +142,10 @@ def run_spark_jobs(dataset=None, spark=None):
     print('\n...done!\n')
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
-    nd.describe(['asin', 'overall', 'reviewerID']).show()
+    overall = nd.select(nd['overall']).toPandas()
+    print(overall.describe())
+    summary_vis = vis.Vis("summary",overall)
+
     print('\n...done!\n')
 
     print('\nConverting the Product ID (ASIN) and Reviewer ID columns into index form...\n')
