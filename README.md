@@ -111,10 +111,41 @@ Follow the steps **in order** to build the application and deploy the Jupyter No
     docker container exec -it cars_container jupyter notebook list
     ```
 
+8. Copy data sets from local machine to cars container (from outside the container).
+    
+    ```docker
+    docker cp <dataset_file.json> cars_container:/home/jovyan/work/
+    ```
+
+9. Run the program via the command line.
+
+    ```python
+    python recommender.py <optional arguments>
+    ```
+
+
 ### DockerHub Image
 
 The latest version of the CARS image can be found [here](https://hub.docker.com/repository/docker/nikkirwin/cars). You can pull the image by running the following command.
 
 ```docker
 docker pull nikkirwin/cars:latest
+```
+
+### Python Command Line Arguments Usage
+
+```python
+optional arguments:
+  -h, --help                                                      show this help message and exit
+  -c [1-12], --cores [1-12]                                       specify the logical core count for the Spark Context
+  -l /path/to/<filename>.log, --log-file /path/to/<filename>.log  save output to log
+  -o, --online                                                    turn on Spark UI
+  -p [1-20], --predictions [1-20]                                 number of predictions to calculate
+  -r [1-5000], --rows [1-5000]                                    top (n) rows to display
+  -s, --show-visualizations                                       turn on data visualizations
+  -v, --verbose                                                   enable verbose command line output for intermediate spark jobs
+  --version                                                       displays the current version of cars
+
+available datasets:
+  -f <filename>.json, --file <filename>.json                      available files are shown below
 ```
