@@ -39,6 +39,10 @@ from pyspark.ml.recommendation import ALS
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import StringIndexer
 from pyspark.ml import Pipeline
+import pandas
+from IPython.display import display
+import matplotlib.pyplot as plt
+import vis
 
 
 # Set the environment
@@ -150,6 +154,22 @@ def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
         logging.info('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
     nd = df.select(df['asin'], df['overall'], df['reviewerID'])
+
+    print('\n...done!\n')
+
+    print('\nShowing the first 100 results from the filtered dataset...\n\n')
+    nd.show(100, truncate=True)
+    print('\n...done!\n')
+
+    print('\nShowing summary statistics for the filtered dataset...\n\n')
+    overall = nd.select(nd['overall']).toPandas()
+    print(overall.describe())
+    summary_vis = vis.Vis("summary",overall)
+
+    print('\n...done!\n')
+
+    print('\nConverting the Product ID (ASIN) and Reviewer ID columns into index form...\n')
+
     if verbose:
         print('\n...done!\n')
         logging.info('\n...done!\n')
@@ -171,6 +191,7 @@ def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose
     if verbose:
         print('\nConverting the Product ID (ASIN) and Reviewer ID columns into index form...\n')
         logging.info('\nConverting the Product ID (ASIN) and Reviewer ID columns into index form...\n')
+
     indexer = [StringIndexer(inputCol=column, outputCol=column + "_index") for column in
                list(set(nd.columns) - {'overall'})]
     pipeline = Pipeline(stages=indexer)
