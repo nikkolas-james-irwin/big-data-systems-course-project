@@ -150,6 +150,8 @@ def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
+    time_vis = vis.Vis("time",df,spark)
+
     if verbose:
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
         logging.info('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
