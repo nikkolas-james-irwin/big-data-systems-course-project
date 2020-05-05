@@ -34,6 +34,7 @@
 import pandas
 import matplotlib.pyplot as plt
 from IPython.display import display
+import plotly.express as px
 
 class Vis:
 
@@ -42,6 +43,8 @@ class Vis:
         self.data = data
         if (self.type == "summary"):
             self.vis_summary(self.data)
+        elif (self.type == "prediction"):
+            self.vis_prediction(self.data)
         else:
             raise Exception("Invalid visualization type")
 
@@ -55,3 +58,20 @@ class Vis:
         ax1.set_title('Ratings Distribution')
         ax1.grid(False)
         plt.show()
+
+    def vis_prediction(self, data):
+        print("Converting to pandas for visualization...")
+        df = data.select(data['overall'], data['prediction']).toPandas()
+        print("Plotting predicted vs. actual ratings...")
+        fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl')
+        fig.show()
+
+        print("Plotting error distribution...")
+        fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl')
+        fig.show()
+
+        # gca stands for 'get current axis'
+        # ax = plt.gca()
+        # df.plot(kind='scatter',x='prediction',y='overall',figsize=(8, 8),ax=ax)
+        # #df.plot(kind='line',x='RT',y='num_pets', color='red', ax=ax)
+        # plt.show()
