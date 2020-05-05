@@ -67,11 +67,6 @@ class Vis:
         fig.show()
 
         print("Plotting error distribution...")
-        fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl')
-        fig.show()
-
-        # gca stands for 'get current axis'
-        # ax = plt.gca()
-        # df.plot(kind='scatter',x='prediction',y='overall',figsize=(8, 8),ax=ax)
-        # #df.plot(kind='line',x='RT',y='num_pets', color='red', ax=ax)
-        # plt.show()
+        df['error'] = df['prediction'] - df['overall']
+        fig2 = px.histogram(df, x="error")
+        fig2.show()
