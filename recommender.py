@@ -76,8 +76,8 @@ def select_dataset(file=None):
             files.remove('.DS_Store')
 
         file_count = 1
-        print(f'\n\nSelect a dataset to run from {file_count} files listed below.\n\n')
-        logging.info(f'\n\nSelect a dataset to run from {file_count} files listed below.\n\n')
+        print(f'\n\nSelect a dataset to run from the files listed below.\n\n')
+        logging.info(f'\n\nSelect a dataset to run from the files listed below.\n\n')
         for file in files:
             print('File', str(file_count).zfill(2), '-', file)
             file_count += 1
@@ -134,7 +134,19 @@ def activate_spark_application_ui():
     logging.info('\n...done!\n')
 
 
-def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose=False):
+def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, verbose=False):
+    if dataset is None:
+        raise FileNotFoundError
+        sys.exit('No dataset was assigned for processing.')
+    elif spark is None:
+        raise RuntimeError
+        sys.exit('The Spark Context was not properly initialized.')
+    
+    if num_predictions is None:
+        num_predictions = 5
+    if rows is None:
+        rows = 10
+        
     if verbose:
         print('\nProcessing the dataset...\n')
         logging.info('\nProcessing the dataset...\n')
@@ -157,14 +169,14 @@ def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose
 
     print('\n...done!\n')
 
-    print('\nShowing the first 100 results from the filtered dataset...\n\n')
-    nd.show(100, truncate=True)
+    print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
+    nd.show(rows, truncate=True)
     print('\n...done!\n')
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
     print(overall.describe())
-    summary_vis = vis.Vis("summary",overall)
+    summary_vis = vis.Vis("summary", overall)
 
     print('\n...done!\n')
 
@@ -301,7 +313,8 @@ def execute_recommender_system(command_line_arguments=None):
             logical_cores = command_line_arguments.cores
         spark_context = initialize_spark_context(cores_allocated=logical_cores)
         spark_session = initialize_spark_session()
-        activate_spark_application_ui()
+        if command_line_arguments.online:
+            activate_spark_application_ui()
         run_spark_jobs(dataset=amazon_dataset,
                        num_predictions=command_line_arguments.predictions,
                        rows=command_line_arguments.rows,
