@@ -134,7 +134,7 @@ docker pull nikkirwin/cars:latest
 
 ### Python Command Line Arguments Usage
 
-```python
+```text
 optional arguments:
   -h, --help                                                      show this help message and exit
   -c [1-12], --cores [1-12]                                       specify the logical core count for the Spark Context
