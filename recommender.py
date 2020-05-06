@@ -165,7 +165,8 @@ def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
-    print(overall.describe())
+    summary_table = overall.describe()
+    display(summary_table)
     summary_vis = vis.Vis("summary",overall)
 
     print('\n...done!\n')
