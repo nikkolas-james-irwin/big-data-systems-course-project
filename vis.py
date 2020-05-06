@@ -33,6 +33,9 @@
 
 import pandas
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from IPython.display import display
 
 class Vis:
@@ -42,6 +45,8 @@ class Vis:
         self.data = data
         if (self.type == "summary"):
             self.vis_summary(self.data)
+        elif (self.type == "helpful"):
+            self.vis_helpful_review(self.data)
         else:
             raise Exception("Invalid visualization type")
 
@@ -55,3 +60,35 @@ class Vis:
         ax1.set_title('Ratings Distribution')
         ax1.grid(False)
         plt.show()
+
+
+    def vis_helpful_review(self,data):
+
+        df = data.toPandas()
+        # Create figure with secondary y-axis
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+        # Add traces
+        fig.add_trace(
+            go.Scattergl(x=df['reviewerID'], y=df['overall'], name="Ratings", mode='markers',),
+            secondary_y=False,
+        )
+
+        fig.add_trace(
+            go.Scattergl(x=df['reviewerID'], y=df['vote'], name="Votes", mode='markers',),
+            secondary_y=True,
+        )
+
+        # Add figure title
+        fig.update_layout(
+            title_text="Ratings/Votes Correlation"
+        )
+
+        # Set x-axis title
+        fig.update_xaxes(title_text="Reviews")
+
+        # Set y-axes titles
+        fig.update_yaxes(title_text="<b>Ratings</b>", secondary_y=False)
+        fig.update_yaxes(title_text="<b>Votes</b>", secondary_y=True)
+
+        fig.show()

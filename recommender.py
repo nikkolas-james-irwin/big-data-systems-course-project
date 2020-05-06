@@ -178,6 +178,9 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
     print(overall.describe())
     summary_vis = vis.Vis("summary", overall)
 
+    hd = df.select(df['reviewerID'], df['overall'], df['vote'])
+    helpful_vis = vis.Vis("helpful",hd)
+
     print('\n...done!\n')
 
     print('\nConverting the Product ID (ASIN) and Reviewer ID columns into index form...\n')
