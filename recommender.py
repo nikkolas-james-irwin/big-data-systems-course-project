@@ -264,8 +264,9 @@ def run_spark_jobs(dataset=None, num_predictions=5, rows=10, spark=None, verbose
     logging.info('\n...done!\n')
 
     # Randomly sample small subset of prediction data for better plotting performance
-    print("Randomly sampling prediction results for visualization...")
+    print("Sampling prediction results and converting to pandas for visualization...")
     predictions_sample = predictions.sample(False, 0.01, seed=0)
+    print("\n...done!")
 
     prediction_vis = vis.Vis("prediction",predictions_sample)
 

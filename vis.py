@@ -60,13 +60,19 @@ class Vis:
         plt.show()
 
     def vis_prediction(self, data):
-        print("Converting to pandas for visualization...")
         df = data.select(data['overall'], data['prediction']).toPandas()
-        print("Plotting predicted vs. actual ratings...")
+        print("\nPlotting visualizations...")
         fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl')
         fig.show()
 
-        print("Plotting error distribution...")
         df['error'] = df['prediction'] - df['overall']
         fig2 = px.histogram(df, x="error")
+        fig2.update_layout(
+            bargap=0.1,
+            title={
+                'text': "ALS Prediction Error Distribution",
+                'y':0.98,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
         fig2.show()
