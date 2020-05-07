@@ -40,13 +40,13 @@ from IPython.display import display
 
 class Vis:
 
-    def __init__(self, type, data):
+    def __init__(self, type, data, spark=None):
         self.type = type    # instance variable unique to each instance
         self.data = data
         if (self.type == "summary"):
             self.vis_summary(self.data)
         elif (self.type == "helpful"):
-            self.vis_helpful_review(self.data)
+            self.vis_helpful_review(self.data,spark)
         else:
             raise Exception("Invalid visualization type")
 
@@ -62,20 +62,59 @@ class Vis:
         plt.show()
 
 
-    def vis_helpful_review(self,data):
+    def vis_helpful_review(self,data,spark):
 
-        df = data.toPandas()
+        data.createOrReplaceTempView('TBL_HELPFUL_REVIEWS')
+        result = spark.sql('''SELECT reviewerID, overall, vote FROM TBL_HELPFUL_REVIEWS WHERE asin = 
+        (SELECT asin AS `itemID`
+                FROM TBL_HELPFUL_REVIEWS
+                GROUP BY ASIN
+                ORDER BY count(ASIN) DESC LIMIT 1) ''')
+
+        #print(f'\n\nShowing the popularity over time of the most-reviewed item of the dataset...', '\n')
+
+
+        df = result.toPandas()
+
+        fig0 = make_subplots(rows=1, cols=2)
+
+        fig0.add_trace(
+            go.Scattergl(x=df['overall'], y=df['vote'], mode='markers', name="Rating/Vote Correlation"),
+            row=1, col=1
+        )
+
+        fig0.add_trace(
+            go.Bar(x=df['overall'], y=df['vote'], name= "Vote Disbrution Across Ratings"),
+            row=1, col=2
+        )
+
+        fig0.update_layout(width=900,height=450,title_text="Ratings vs. Votes for Most Popular Item")
+
+        fig0.update_xaxes(title_text="Ratings")
+        fig0.update_yaxes(title_text="Votes")
+
+        fig0.show()
+
+
+
+
+        # fig0 = px.scatter(df, x="overall", y="vote", title="Rating/Vote Correlation" ,width=400,height=400, render_mode="webgl")
+        # fig0.show()
+
+        # fig_bar = px.bar(df, x="overall", y="vote", title="Vote Disbrution Across Ratings", width=400,height=400)
+        # fig_bar.show()
+
         # Create figure with secondary y-axis
         fig = make_subplots(specs=[[{"secondary_y": True}]])
 
         # Add traces
         fig.add_trace(
-            go.Scattergl(x=df['reviewerID'], y=df['overall'], name="Ratings", mode='markers',),
+            go.Scattergl(x=df['reviewerID'], y=df['overall'], name="Ratings", mode='markers'),
             secondary_y=False,
         )
 
         fig.add_trace(
-            go.Scattergl(x=df['reviewerID'], y=df['vote'], name="Votes", mode='markers',),
+            go.Scattergl(x=df['reviewerID'], y=df['vote'], name="Votes", mode='markers'),
             secondary_y=True,
         )
 
