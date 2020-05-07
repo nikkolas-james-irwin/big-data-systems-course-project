@@ -162,6 +162,8 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
+    time_vis = vis.Vis("time",df,spark)
+
     if verbose:
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
         logging.info('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
@@ -177,7 +179,9 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
-    #print(overall.describe())
+    #print(overall.describe()) --> TODO: try overall.describe().show(), ideally convert to Pandas
+    summary_table = overall.describe()
+    display(summary_table)
     summary_vis = vis.Vis("summary", overall)
 
     hd = df.select(df['reviewerID'], df['asin'], df['overall'], df['vote'])
@@ -273,17 +277,27 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
+
     print(f'\nDisplaying the first {rows} predictions...\n\n')
     logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
     predictions.show(rows, truncate=True)
     # predictions_pandas = predictions.take(rows).toPandas()
     # display(predictions_pandas[0:rows])
+
     print('\n...done!\n')
     logging.info('\n...done!\n')
 
-    print(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
-    logging.info(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
-    user_recs = model.recommendForAllUsers(num_predictions).show(rows, truncate=False, vertical=True)
+    # Randomly sample small subset of prediction data for better plotting performance
+    print("Sampling prediction results and converting to pandas for visualization...")
+    predictions_sample = predictions.sample(False, 0.01, seed=0)
+    print("\n...done!")
+
+    prediction_vis = vis.Vis("prediction",predictions_sample)
+
+    # print(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
+    # logging.info(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
+    # user_recs = model.recommendForAllUsers(num_predictions).show(rows, truncate=False, vertical=True)
+    user_recs = model.recommendForAllUsers(10).show(10, truncate=False, vertical=True)
     print('\n...done!')
     logging.info('\n...done!')
 
