@@ -275,9 +275,9 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
 
     print(f'\nDisplaying the first {rows} predictions...\n\n')
     logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
-    #predictions.show(rows, truncate=True)
-    predictions_pandas = predictions.take(rows).toPandas()
-    display(predictions_pandas[0:rows])
+    predictions.show(rows, truncate=True)
+    # predictions_pandas = predictions.take(rows).toPandas()
+    # display(predictions_pandas[0:rows])
     print('\n...done!\n')
     logging.info('\n...done!\n')
 
