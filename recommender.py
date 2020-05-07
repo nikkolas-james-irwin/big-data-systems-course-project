@@ -134,7 +134,9 @@ def activate_spark_application_ui():
     logging.info('\n...done!\n')
 
 
-def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, verbose=False):
+def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualizations=False, spark=None, verbose=False):
+    pd_verbose = None
+    
     if dataset is None:
         raise FileNotFoundError
         sys.exit('No dataset was assigned for processing.')
@@ -147,6 +149,10 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
     if rows is None:
         rows = 10
         
+    pandas.set_option('expand_frame_repr', True)
+    pandas.set_option("display.max_rows", rows)
+    pandas.set_option('max_colwidth', 200)
+        
     if verbose:
         print('\nProcessing the dataset...\n')
         logging.info('\nProcessing the dataset...\n')
@@ -158,34 +164,60 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
     if verbose:
         print(f'\nShowing the first {rows} results from the dataset...\n\n')
         logging.info(f'\nShowing the first {rows} results from the dataset...\n\n')
-        df.show(rows, truncate=True)
+        pd_verbose = df.select(df['asin'],
+                               df['image'],
+                               df['overall'],
+                               df['reviewText'],
+                               df['reviewTime'],
+                               df['reviewerID'],
+                               df['reviewerName'],
+                               df['style'],
+                               df['summary'],
+                               df['unixReviewTime'],
+                               df['verified'],
+                               df['vote'])
+        pd_verbose = pd_verbose.toPandas()
+        display(pd_verbose.head(rows))
+        
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
-    time_vis = vis.Vis("time",df,spark)
+    if show_visualizations:
+        time_vis = vis.Vis("time",df,spark)
 
     if verbose:
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
         logging.info('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
     nd = df.select(df['asin'], df['overall'], df['reviewerID'])
 
-    print('\n...done!\n')
+    if verbose:
+        print('\n...done!\n')
+        logging.info('\n...done!\n')
 
     print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
-    #nd.show(rows, truncate=True)
+    # nd.show(rows, truncate=True)
     nd_pandas = nd.toPandas()
-    display(nd_pandas[0:rows])
+    if verbose:
+        display(nd_pandas[0:rows])
     print('\n...done!\n')
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
-    #print(overall.describe()) --> TODO: try overall.describe().show(), ideally convert to Pandas
-    summary_table = overall.describe()
-    display(summary_table)
-    summary_vis = vis.Vis("summary", overall)
+    # print(overall.describe()) --> TODO: try overall.describe().show(), ideally convert to Pandas
+    if verbose:
+        print('\nShowing summary statistics for the filtered dataset...\n\n')
+        logging.info('\nShowing summary statistics for the filtered dataset...\n\n')
+        summary_table = overall.describe()
+        display(summary_table)
+        print('\n...done!\n')
+        logging.info('\n...done!\n')
+    
+    if show_visualizations:
+        summary_vis = vis.Vis("summary", overall)
 
-    hd = df.select(df['reviewerID'], df['asin'], df['overall'], df['vote'])
-    helpful_vis = vis.Vis("helpful",hd,spark)
+    if show_visualizations:
+        hd = df.select(df['reviewerID'], df['asin'], df['overall'], df['vote'])
+        helpful_vis = vis.Vis("helpful",hd,spark)
 
     print('\n...done!\n')
 
@@ -198,14 +230,11 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
     if verbose:
         print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
         logging.info(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
-        nd.show(rows, truncate=True)
-        print('\n...done!\n')
-        logging.info('\n...done!\n')
-
-    if verbose:
-        print('\nShowing summary statistics for the filtered dataset...\n\n')
-        logging.info('\nShowing summary statistics for the filtered dataset...\n\n')
-        nd.describe(['asin', 'overall', 'reviewerID']).show()
+        pd_verbose = nd.select(df['asin'],
+                               df['overall'],
+                               df['reviewerID'])
+        pd_verbose = pd_verbose.toPandas()
+        display(pd_verbose.head(rows))
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
@@ -224,7 +253,9 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
     if verbose:
         print(f'\nShowing the first {rows} results from the converted dataset...\n\n')
         logging.info(f'\nShowing the first {rows} results from the converted dataset...\n\n')
-        transformed.show(rows, truncate=True)
+        pd_verbose = transformed.take(rows)
+        pd_verbose = pandas.DataFrame(pd_verbose)
+        display(pd_verbose.head(rows))
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
@@ -277,27 +308,30 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
-
-    print(f'\nDisplaying the first {rows} predictions...\n\n')
-    logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
-    predictions.show(rows, truncate=True)
-    # predictions_pandas = predictions.take(rows).toPandas()
-    # display(predictions_pandas[0:rows])
+    if verbose:
+        print(f'\nDisplaying the first {rows} predictions...\n\n')
+        logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
+        predictions_pandas = predictions.take(rows)
+        predictions_pandas = pandas.DataFrame(predictions_pandas)
+        display(predictions_pandas.head(rows))
 
     print('\n...done!\n')
     logging.info('\n...done!\n')
 
     # Randomly sample small subset of prediction data for better plotting performance
-    print("Sampling prediction results and converting to pandas for visualization...")
-    predictions_sample = predictions.sample(False, 0.01, seed=0)
-    print("\n...done!")
+    if show_visualizations:
+        print("\nSampling prediction results and converting to pandas for visualization..\n")
+        predictions_sample = predictions.sample(False, 0.01, seed=0)
+        print("\n...done!\n")
+        prediction_vis = vis.Vis("prediction",predictions_sample)
 
-    prediction_vis = vis.Vis("prediction",predictions_sample)
-
-    # print(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
-    # logging.info(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
-    # user_recs = model.recommendForAllUsers(num_predictions).show(rows, truncate=False, vertical=True)
-    user_recs = model.recommendForAllUsers(10).show(10, truncate=False, vertical=True)
+    print(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
+    logging.info(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
+    user_recs = model.recommendForAllUsers(num_predictions)
+    # df.rename(columns={'oldName1': 'newName1', 'oldName2': 'newName2'}, inplace=True)
+    pandas_recs = user_recs.take(rows)
+    pandas_recs = pandas.DataFrame(pandas_recs)
+    display(pandas_recs.head(rows))
     print('\n...done!')
     logging.info('\n...done!')
 
@@ -340,6 +374,7 @@ def execute_recommender_system(command_line_arguments=None):
                        num_predictions=command_line_arguments.predictions,
                        rows=command_line_arguments.rows,
                        spark=spark_session,
+                       show_visualizations=command_line_arguments.show_visualizations,
                        verbose=command_line_arguments.verbose)
         exit_message(sc=spark_context, browser_on=command_line_arguments.online)
     except Exception as execution_err:  # Catch any error type, print the error, and exit the program.
