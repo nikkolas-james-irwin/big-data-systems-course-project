@@ -162,6 +162,8 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
+    time_vis = vis.Vis("time",df,spark)
+
     if verbose:
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
         logging.info('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
@@ -175,8 +177,10 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
-    print(overall.describe())
-    summary_vis = vis.Vis("summary", overall)
+
+    summary_table = overall.describe()
+    display(summary_table)
+    summary_vis = vis.Vis("summary",overall)
 
     print('\n...done!\n')
 
