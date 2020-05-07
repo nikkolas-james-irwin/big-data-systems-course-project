@@ -35,6 +35,7 @@ import pandas
 import matplotlib.pyplot as plt
 import matplotlib.style as sty
 from IPython.display import display
+import plotly.express as px
 
 class Vis:
 
@@ -45,6 +46,8 @@ class Vis:
         self.data = data
         if (self.type == "summary"):
             self.vis_summary(self.data)
+        elif (self.type == "prediction"):
+            self.vis_prediction(self.data)
         elif (self.type == "time"):
             self.vis_timeseries(self.data,spark)
         else:
@@ -62,6 +65,24 @@ class Vis:
         plt.xlabel('Ratings')
         ax1.grid(False)
         plt.show()
+
+    def vis_prediction(self, data):
+        df = data.select(data['overall'], data['prediction']).toPandas()
+        print("\nPlotting visualizations...")
+        fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl')
+        fig.show()
+
+        df['error'] = df['prediction'] - df['overall']
+        fig2 = px.histogram(df, x="error")
+        fig2.update_layout(
+            bargap=0.1,
+            title={
+                'text': "ALS Prediction Error Distribution",
+                'y':0.98,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+        fig2.show()
 
     def vis_timeseries(self, data, spark):
         k = 10

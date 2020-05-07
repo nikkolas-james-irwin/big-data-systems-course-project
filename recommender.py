@@ -272,15 +272,24 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
-    print(f'\nDisplaying the first {rows} predictions...\n\n')
-    logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
-    predictions.show(rows, truncate=True)
+    # print(f'\nDisplaying the first {rows} predictions...\n\n')
+    # logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
+    # predictions.show(rows, truncate=True)
+    predictions.show(10, truncate=True)
     print('\n...done!\n')
     logging.info('\n...done!\n')
 
-    print(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
-    logging.info(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
-    user_recs = model.recommendForAllUsers(num_predictions).show(rows, truncate=False, vertical=True)
+    # Randomly sample small subset of prediction data for better plotting performance
+    print("Sampling prediction results and converting to pandas for visualization...")
+    predictions_sample = predictions.sample(False, 0.01, seed=0)
+    print("\n...done!")
+
+    prediction_vis = vis.Vis("prediction",predictions_sample)
+
+    # print(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
+    # logging.info(f'\nDisplaying the first {num_predictions} recommendations for the first {rows} users...\n\n')
+    # user_recs = model.recommendForAllUsers(num_predictions).show(rows, truncate=False, vertical=True)
+    user_recs = model.recommendForAllUsers(10).show(10, truncate=False, vertical=True)
     print('\n...done!')
     logging.info('\n...done!')
 
