@@ -172,15 +172,20 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
     print('\n...done!\n')
 
     print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
-    nd.show(rows, truncate=True)
+    #nd.show(rows, truncate=True)
+    nd_pandas = nd.toPandas()
+    display(nd_pandas[0:rows])
     print('\n...done!\n')
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
-
+    #print(overall.describe()) --> TODO: try overall.describe().show(), ideally convert to Pandas
     summary_table = overall.describe()
     display(summary_table)
-    summary_vis = vis.Vis("summary",overall)
+    summary_vis = vis.Vis("summary", overall)
+
+    hd = df.select(df['reviewerID'], df['asin'], df['overall'], df['vote'])
+    helpful_vis = vis.Vis("helpful",hd,spark)
 
     print('\n...done!\n')
 
@@ -272,10 +277,13 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, spark=None, ve
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
-    # print(f'\nDisplaying the first {rows} predictions...\n\n')
-    # logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
-    # predictions.show(rows, truncate=True)
-    predictions.show(10, truncate=True)
+
+    print(f'\nDisplaying the first {rows} predictions...\n\n')
+    logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
+    predictions.show(rows, truncate=True)
+    # predictions_pandas = predictions.take(rows).toPandas()
+    # display(predictions_pandas[0:rows])
+
     print('\n...done!\n')
     logging.info('\n...done!\n')
 

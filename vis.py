@@ -33,9 +33,11 @@
 
 import pandas
 import matplotlib.pyplot as plt
-import matplotlib.style as sty
-from IPython.display import display
 import plotly.express as px
+import plotly.graph_objects as go
+import matplotlib.style as sty
+from plotly.subplots import make_subplots
+from IPython.display import display
 
 class Vis:
 
@@ -46,6 +48,8 @@ class Vis:
         self.data = data
         if (self.type == "summary"):
             self.vis_summary(self.data)
+        elif (self.type == "helpful"):
+            self.vis_helpful_review(self.data,spark)
         elif (self.type == "prediction"):
             self.vis_prediction(self.data)
         elif (self.type == "time"):
@@ -66,6 +70,73 @@ class Vis:
         ax1.grid(False)
         plt.show()
 
+    def vis_helpful_review(self,data,spark):
+
+        data.createOrReplaceTempView('TBL_HELPFUL_REVIEWS')
+        result = spark.sql('''SELECT reviewerID, overall, vote FROM TBL_HELPFUL_REVIEWS WHERE asin = 
+        (SELECT asin AS `itemID`
+                FROM TBL_HELPFUL_REVIEWS
+                GROUP BY ASIN
+                ORDER BY count(ASIN) DESC LIMIT 1) ''')
+
+        #print(f'\n\nShowing the popularity over time of the most-reviewed item of the dataset...', '\n')
+
+
+        df = result.toPandas()
+
+        fig0 = make_subplots(rows=1, cols=2)
+
+        fig0.add_trace(
+            go.Scattergl(x=df['overall'], y=df['vote'], mode='markers', name="Rating/Vote Correlation"),
+            row=1, col=1
+        )
+
+        fig0.add_trace(
+            go.Bar(x=df['overall'], y=df['vote'], name= "Vote Disbrution Across Ratings"),
+            row=1, col=2
+        )
+
+        fig0.update_layout(width=900,height=450,title_text="Ratings vs. Votes for Most Popular Item")
+
+        fig0.update_xaxes(title_text="Ratings")
+        fig0.update_yaxes(title_text="Votes")
+
+        fig0.show()
+
+        # fig0 = px.scatter(df, x="overall", y="vote", title="Rating/Vote Correlation" ,width=400,height=400, render_mode="webgl")
+        # fig0.show()
+
+        # fig_bar = px.bar(df, x="overall", y="vote", title="Vote Disbrution Across Ratings", width=400,height=400)
+        # fig_bar.show()
+
+        # Create figure with secondary y-axis
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+        # Add traces
+        fig.add_trace(
+            go.Scattergl(x=df['reviewerID'], y=df['overall'], name="Ratings", mode='markers'),
+            secondary_y=False,
+        )
+
+        fig.add_trace(
+            go.Scattergl(x=df['reviewerID'], y=df['vote'], name="Votes", mode='markers'),
+            secondary_y=True,
+        )
+
+        # Add figure title
+        fig.update_layout(
+            title_text="Ratings/Votes Correlation"
+        )
+
+        # Set x-axis title
+        fig.update_xaxes(title_text="Reviews")
+
+        # Set y-axes titles
+        fig.update_yaxes(title_text="<b>Ratings</b>", secondary_y=False)
+        fig.update_yaxes(title_text="<b>Votes</b>", secondary_y=True)
+
+        fig.show()
+        
     def vis_prediction(self, data):
         df = data.select(data['overall'], data['prediction']).toPandas()
         print("\nPlotting visualizations...")
