@@ -64,11 +64,25 @@ elif platform == "win32":
 
 
 def welcome_message():
+    """Prints and logs the program welcome message."""
     print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!')
     logging.info('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!')
 
 
 def select_dataset(file=None):
+    """Selects the dataset to run CARS.
+
+    Defines which dataset will be analyzed from the list of available datasets. If a 
+    file has not already been specified, prompts the user for a dataset to use. 
+    Catches possible input variations by checking for the file extension, and appends 
+    the extension if necessary.
+
+    Args:
+        file (str): Predefined name of the preferred dataset. Defaults to none.
+
+    Returns:
+        The filename of the preferred dataset.
+    """
     if file is None:
         dataset_directory = os.listdir(path='datasets')
         files = dataset_directory
@@ -98,11 +112,26 @@ def select_dataset(file=None):
 
 
 def configure_core_count():
+    """Prompts the user for the number of logical cores to utilize."""
     logical_cores_to_allocate = str(input('Select the number of logical cores to use for the Spark Context: '))
     return logical_cores_to_allocate
 
 
 def initialize_spark_context(cores_allocated='*'):
+    """Initializes the SparkContext of the application.
+
+    Creates a SparkContext with which to run the application. The SparkContext is 
+    initialized with the number of logical cores defined by the user. Communicates 
+    with the user before and after successful initialization.
+
+    Args:
+        cores_allocated (int): Number of cores with which to define the SparkContext. 
+            User defined.
+    
+    Returns:
+        The initialized SparkContext with which to perform analysis.
+    """
+
     print(f'\nInitializing Spark Context with {cores_allocated} logical cores...\n\n')
     logging.info(f'\nInitializing Spark Context with {cores_allocated} logical cores...\n\n')
 
@@ -115,6 +144,16 @@ def initialize_spark_context(cores_allocated='*'):
 
 
 def initialize_spark_session():
+    """Initializes the SparkSession of the application.
+
+    Creates a SparkSession for the application, utilizing the name 
+    Recommendation_system. If the SparkSession already exists, gets this session.
+    Communicates with the user before and after initialization of the session.
+    
+    Returns:
+        The initialized SparkSession for the application.
+    """
+
     print('\nCreating Spark Session...\n')
     logging.info('\nCreating Spark Session...\n')
 
@@ -127,6 +166,12 @@ def initialize_spark_session():
 
 
 def activate_spark_application_ui():
+    """Activates the browser for the Spark UI.
+
+    Opens the web browser to show the Spark application UI. Shows all jobs currently running.
+    Communicates with the user before and after starting the browser.
+    """
+
     print('\nOpening Web Browser for the Spark Application UI...\n')
     logging.info('\nOpening Web Browser for the Spark Application UI...\n')
     webbrowser.open('http://localhost:4040/jobs/')
@@ -135,6 +180,29 @@ def activate_spark_application_ui():
 
 
 def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualizations=False, spark=None, verbose=False):
+    """Runs all Spark jobs for the recommender system.
+
+    Performs analysis on dataset to find num_predictions recommendations using ALS. 
+    Communicates with the user and provides visualizations corresponding with the 
+    analysis.
+
+    Args:
+        dataset (str): Filename of the dataset to be analyzed.
+        num_predictions (int): The number of recommendations to provide following analysis. 
+            User set. Defaults to 5.
+        rows (int): The number of rows with which to perform analysis. User set. Defaults to 10.
+        show_visualizations (bool): Determines if visualizations are to be displayed to the 
+            user. User set. Defaults to False.
+        spark: The SparkSession of the application.
+        verbose (bool): Determines if the program is running in verbose mode. More 
+            detailed output will be provided to the user, including intermediate steps taken 
+            in calculating the recommendation. User set. Defaults to False.
+
+    Raises:
+        FileNotFoundError: If dataset is not assigned. If dataset is none.
+        RuntimeError: If spark is not properly initialized. If spark is none.
+    """
+
     pd_verbose = None
     
     if dataset is None:
@@ -144,6 +212,7 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         raise RuntimeError
         sys.exit('The Spark Context was not properly initialized.')
     
+    # Set default number of predictions and rows if not defined by the user.
     if num_predictions is None:
         num_predictions = 5
     if rows is None:
@@ -337,6 +406,16 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
 
 
 def exit_message(sc=None, browser_on=False):
+    """Closes the program on user input.
+
+    Stops the SparkContext and allows the program to exit. If specified by the user, the program runs idly 
+    until a stop message is received to allow for browser navigation and interaction. 
+
+    Args:
+        sc (SparkContext): The Spark application master. Defaults to none.
+        browser_on (bool): An optional argument set by the user to allow browser navigation and interaction. 
+            Defaults to False.
+    """
     
     while browser_on:
         choice = input('\n\nShutdown the program? [\'y\' for yes, \'n\' for no]: ')
@@ -353,6 +432,15 @@ def exit_message(sc=None, browser_on=False):
 
 
 def execute_recommender_system(command_line_arguments=None):
+    """Execution of the recommender system.
+
+    Handles all actions neccessary to run the recommender system, including initialization,
+    job execution, and shutdown.
+
+    Args:
+        command_line_arguments (arguments): Key-value pairs defining all set optional 
+            arguments and the set values. Defaults to no arguments.
+    """
     try:  # Attempt to run the recommender system and associated startup methods.
         if command_line_arguments.log_file:
             filename = command_line_arguments.log_file
@@ -383,6 +471,15 @@ def execute_recommender_system(command_line_arguments=None):
 
 # Initialize Parser
 def init_argparser() -> argparse.ArgumentParser:
+    """Initializes argparse optional arguments.
+
+    Defines all optional command line arguments to be accepted by the program,
+    including datatypes, choice restrictions, and default values. Descriptions are 
+    provided for the implicitly defined help argument.
+
+    Returns:
+        ArgumentParser: The fully initialized argument parser.
+    """
     formatter = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=140, width=150)
     
     parser = argparse.ArgumentParser(
