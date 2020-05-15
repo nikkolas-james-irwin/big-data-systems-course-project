@@ -30,3 +30,5 @@
 environment.yml
 Dockerfile
 README.md
+log/
+log/*
