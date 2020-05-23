@@ -40,10 +40,21 @@ from plotly.subplots import make_subplots
 from IPython.display import display
 
 class Vis:
-
+    
+    plotly_table_styles = {
+        "header_color": "rgb(49, 130, 189)",
+        "row_even_color": "rgb(239, 243, 255)",
+        "row_odd_color": "rgb(189, 215, 231)",
+        "font_header_color": "white",
+        "font_header_size": 14,
+        "font_cell_color": "black",
+        "font_cell_size": 11,
+    }
+    
+    # Captures graph objects into dictionary for reference
     vis_dict = {}
 
-    def __init__(self, type, data, spark=None):
+    def __init__(self, type, data, spark=None, rows=None):
         self.type = type    # instance variable unique to each instance
         self.data = data
         if (self.type == "summary"):
@@ -53,7 +64,7 @@ class Vis:
         elif (self.type == "prediction"):
             self.vis_prediction(self.data)
         elif (self.type == "time"):
-            self.vis_timeseries(self.data,spark)
+            self.vis_timeseries(self.data,spark,rows)
         else:
             raise Exception("Invalid visualization type")
 
@@ -155,24 +166,47 @@ class Vis:
                 'yanchor': 'top'})
         fig2.show()
 
-    def vis_timeseries(self, data, spark):
-        k = 10
-        data.createOrReplaceTempView('TBL_RATING_TIMESERIES')
+    def vis_timeseries(self, data, spark,rows):
+        data.createOrReplaceTempView('TBL_RATING')
         top_items = spark.sql('''SELECT count(ASIN) AS `Review Count`,
-                                    asin AS `ASIN`
-                             FROM TBL_RATING_TIMESERIES
-                             GROUP BY ASIN
-                             ORDER BY `Review Count` DESC''')
+                                 asin AS `ASIN`
+                                 FROM TBL_RATING
+                                 GROUP BY ASIN
+                                 ORDER BY `Review Count` DESC''')
 
-        print(f'\n\nShowing the {k} most reviewed items for the dataset.', '\n')
+        print(f'\n\nShowing the {rows} most reviewed items for the dataset.', '\n')
         #top_items.show(n=k)
-        ti = top_items.toPandas()
-        display(ti[0:k])
+        ti = top_items.toPandas().head(rows)
+        #display(ti[0:rows])
+
+        header_list = ["Review Count", "ASIN"]
+
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[50,50],
+            header=dict(
+                    values=header_list,
+                    fill_color=self.plotly_table_styles.get('header_color', None),
+                    align='left',
+                    font=dict(color=self.plotly_table_styles.get('font_header_color', None), 
+                              size=self.plotly_table_styles.get('font_header_size', None))
+                    ),
+            cells=dict(values=[ti['Review Count'], 
+                               ti.ASIN],
+                    fill_color = [[self.plotly_table_styles.get('row_odd_color', None),self.plotly_table_styles.get('row_even_color', None)]*rows],
+                    align='left',
+                    font=dict(color=self.plotly_table_styles.get('font_cell_color', None), size=self.plotly_table_styles.get('font_cell_size', None))))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=320, r=320, t=0, b=0),
+        )
+
+        fig_table.show()
 
         # Note: 'Most Popular Item' in the below query really refers to the 'Review Count' of the most popular item.
         #       Using 'Most Popular Item' alias for simplicity for plot labeling purposes
         data.createOrReplaceTempView('TBL_RATING_TIMESERIES')
-        df = spark.sql('''SELECT count(ASIN) as `Most Popular Item`, unixReviewTime AS `Review Date`  FROM TBL_RATING_TIMESERIES WHERE asin = 
+        df = spark.sql('''SELECT count(ASIN) as `Review Count`, unixReviewTime AS `Review Date`  FROM TBL_RATING_TIMESERIES WHERE asin = 
         (SELECT asin AS `itemID`
                 FROM TBL_RATING_TIMESERIES
                 GROUP BY ASIN
@@ -180,7 +214,6 @@ class Vis:
         GROUP BY `Review Date` ORDER BY `Review Date` ''')
 
         print(f'\n\nShowing the popularity over time of the most-reviewed item of the dataset...', '\n')
-        #df.show(n=k)
 
         # Convert milliseconds to date
 
@@ -188,11 +221,7 @@ class Vis:
 
         # Convert date string to pyspark date type
         df_pandas['Review Date'] = pandas.to_datetime(df_pandas['Review Date'], unit='s')
-        # display(df_pandas)
 
-        # gca stands for 'get current axis'
-        ax = plt.gca()
-        df_pandas.plot(kind='line',x='Review Date',y='Most Popular Item',figsize=(16, 4),ax=ax)
-        plt.ylabel('Review Count')
-        #df.plot(kind='line',x='RT',y='num_pets', color='red', ax=ax)
-        plt.show()
+        # Display ploty time series line graph
+        fig = px.line(df_pandas, x="Review Date", y="Review Count", title='Popularity Over Time for the Most Popular Item')
+        fig.show()

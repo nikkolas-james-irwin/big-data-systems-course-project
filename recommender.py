@@ -45,6 +45,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import vis
 
+pts = vis.Vis.plotly_table_styles
 
 # Set the environment
 if platform == "linux" or platform == "linux2":
@@ -264,9 +265,10 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         fig_table = go.Figure(data=[go.Table(
             columnwidth=[75,50,150,85,100,100,90,50,40],
             header=dict(values=header_list,
-                    fill_color=headerColor,
+                    fill_color=pts.get('header_color', None),
                     align='left',
-                    font=dict(color='white', size=14)
+                    font=dict(color=pts.get('font_header_color', None), 
+                              size=pts.get('font_header_size', None))
                     ),
             cells=dict(values=[pd_verbose.asin, 
                                pd_verbose.overall, 
@@ -277,9 +279,10 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
                                pd_verbose.summary, 
                                pd_verbose.verified,
                                pd_verbose.vote],
-                    fill_color = [[rowOddColor,rowEvenColor]*rows],
+                    fill_color = [[pts.get('row_odd_color', None), pts.get('row_even_color', None)] * rows],
                     align='left',
-                    font=dict(color='black', size=11)))
+                    font=dict(color=pts.get('font_cell_color', None), 
+                              size=pts.get('font_cell_size', None))))
         ])
 
         fig_table.update_layout(
@@ -294,7 +297,7 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         logging.info('\n...done!\n')
 
     if show_visualizations:
-        time_vis = vis.Vis("time",df,spark)
+        time_vis = vis.Vis("time",df,spark,rows)
 
     if verbose:
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
