@@ -42,6 +42,7 @@ from pyspark.ml import Pipeline
 import pandas
 from IPython.display import display
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import vis
 
 
@@ -226,6 +227,16 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         print('\nProcessing the dataset...\n')
         logging.info('\nProcessing the dataset...\n')
     df = spark.read.json(f'./datasets/{dataset}')
+    df = df.select(df['asin'],
+                   df['overall'],
+                   df['reviewText'],
+                   df['reviewTime'],
+                   df['reviewerID'],
+                   df['reviewerName'],
+                   df['summary'],
+                   df['unixReviewTime'],
+                   df['verified'],
+                   df['vote'])
     if verbose:
         print('\n...done!\n')
         logging.info('\n...done!\n')
@@ -234,18 +245,42 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         print(f'\nShowing the first {rows} results from the dataset...\n\n')
         logging.info(f'\nShowing the first {rows} results from the dataset...\n\n')
         pd_verbose = df.select(df['asin'],
-                               df['image'],
                                df['overall'],
                                df['reviewText'],
                                df['reviewTime'],
                                df['reviewerID'],
                                df['reviewerName'],
-                               df['style'],
                                df['summary'],
-                               df['unixReviewTime'],
                                df['verified'],
                                df['vote'])
-        pd_verbose = pd_verbose.toPandas()
+        pd_verbose = pd_verbose.toPandas().head(rows)
+
+
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[75,50,150,75,100,90,110,50,40],
+            header=dict(values=list(pd_verbose.columns),
+                    fill_color='paleturquoise',
+                    align='left'),
+            cells=dict(values=[pd_verbose.asin, 
+                               pd_verbose.overall, 
+                               pd_verbose.reviewText, 
+                               pd_verbose.reviewTime, 
+                               pd_verbose.reviewerID, 
+                               pd_verbose.reviewerName, 
+                               pd_verbose.summary, 
+                               pd_verbose.verified,
+                               pd_verbose.vote],
+                    fill_color='lavender',
+                    align='left'))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
+        fig_table.show()
+
+
         display(pd_verbose.head(rows))
         
         print('\n...done!\n')
