@@ -255,12 +255,19 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
                                df['vote'])
         pd_verbose = pd_verbose.toPandas().head(rows)
 
+        headerColor = 'rgb(49, 130, 189)'
+        rowEvenColor = 'rgb(239, 243, 255)'
+        rowOddColor = 'rgb(189, 215, 231)'
+
+        header_list = ["ASIN","Rating","Review Text","Review Time","Reviewer ID","Reviewer Name","Summary","Verified","Vote"]
 
         fig_table = go.Figure(data=[go.Table(
-            columnwidth=[75,50,150,75,100,90,110,50,40],
-            header=dict(values=list(pd_verbose.columns),
-                    fill_color='paleturquoise',
-                    align='left'),
+            columnwidth=[75,50,150,85,100,100,90,50,40],
+            header=dict(values=header_list,
+                    fill_color=headerColor,
+                    align='left',
+                    font=dict(color='white', size=14)
+                    ),
             cells=dict(values=[pd_verbose.asin, 
                                pd_verbose.overall, 
                                pd_verbose.reviewText, 
@@ -270,8 +277,9 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
                                pd_verbose.summary, 
                                pd_verbose.verified,
                                pd_verbose.vote],
-                    fill_color='lavender',
-                    align='left'))
+                    fill_color = [[rowOddColor,rowEvenColor]*rows],
+                    align='left',
+                    font=dict(color='black', size=11)))
         ])
 
         fig_table.update_layout(
@@ -280,8 +288,7 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
 
         fig_table.show()
 
-
-        display(pd_verbose.head(rows))
+        #display(pd_verbose.head(rows))
         
         print('\n...done!\n')
         logging.info('\n...done!\n')
