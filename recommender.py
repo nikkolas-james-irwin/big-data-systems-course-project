@@ -42,8 +42,10 @@ from pyspark.ml import Pipeline
 import pandas
 from IPython.display import display
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import vis
 
+pts = vis.Vis.plotly_table_styles
 
 # Set the environment
 if platform == "linux" or platform == "linux2":
@@ -65,8 +67,8 @@ elif platform == "win32":
 
 def welcome_message():
     """Prints and logs the program welcome message."""
-    print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!')
-    logging.info('\n\nWelcome to the Containerized Amazon Recommender System (CARS)!')
+    print('\n\nWelcome to the Containerized Amazon Recommender System (CARS)')
+    logging.info('\n\nWelcome to the Containerized Amazon Recommender System (CARS)')
 
 
 def select_dataset(file=None):
@@ -132,13 +134,13 @@ def initialize_spark_context(cores_allocated='*'):
         The initialized SparkContext with which to perform analysis.
     """
 
-    print(f'\nInitializing Spark Context with {cores_allocated} logical cores...\n\n')
-    logging.info(f'\nInitializing Spark Context with {cores_allocated} logical cores...\n\n')
+    print(f'\nInitializing Spark Context with {cores_allocated} logical cores...\n')
+    logging.info(f'\nInitializing Spark Context with {cores_allocated} logical cores...\n')
 
     sc = SparkContext(f'local[{cores_allocated}]')
 
-    print('\n\n...done!\n')
-    logging.info('\n\n...done!\n')
+    print('\n...done!\n')
+    logging.info('\n...done!\n')
 
     return sc
 
@@ -226,33 +228,77 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         print('\nProcessing the dataset...\n')
         logging.info('\nProcessing the dataset...\n')
     df = spark.read.json(f'./datasets/{dataset}')
+    df = df.select(df['asin'],
+                   df['overall'],
+                   df['reviewText'],
+                   df['reviewTime'],
+                   df['reviewerID'],
+                   df['reviewerName'],
+                   df['summary'],
+                   df['unixReviewTime'],
+                   df['verified'],
+                   df['vote'])
     if verbose:
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
     if verbose:
-        print(f'\nShowing the first {rows} results from the dataset...\n\n')
-        logging.info(f'\nShowing the first {rows} results from the dataset...\n\n')
+        print(f'\nShowing the first {rows} results from the dataset...\n')
+        logging.info(f'\nShowing the first {rows} results from the dataset...\n')
         pd_verbose = df.select(df['asin'],
-                               df['image'],
                                df['overall'],
                                df['reviewText'],
                                df['reviewTime'],
                                df['reviewerID'],
                                df['reviewerName'],
-                               df['style'],
                                df['summary'],
-                               df['unixReviewTime'],
                                df['verified'],
                                df['vote'])
-        pd_verbose = pd_verbose.toPandas()
-        display(pd_verbose.head(rows))
+        pd_verbose = pd_verbose.toPandas().head(rows)
+
+        headerColor = 'rgb(49, 130, 189)'
+        rowEvenColor = 'rgb(239, 243, 255)'
+        rowOddColor = 'rgb(189, 215, 231)'
+
+        header_list = ["ASIN","Rating","Review Text","Review Time","Reviewer ID","Reviewer Name","Summary","Verified","Vote"]
+
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[75,50,150,85,100,100,90,50,40],
+            header=dict(values=header_list,
+                    fill_color=pts.get('header_color', None),
+                    align='left',
+                    font=dict(color=pts.get('font_header_color', None), 
+                              size=pts.get('font_header_size', None))
+                    ),
+                    cells=dict(values=[pd_verbose.asin,
+                                       pd_verbose.overall,
+                                       pd_verbose.reviewText,
+                                       pd_verbose.reviewTime,
+                                       pd_verbose.reviewerID,
+                                       pd_verbose.reviewerName,
+                                       pd_verbose.summary,
+                                       pd_verbose.verified,
+                                       pd_verbose.vote],
+                       fill_color = [[pts.get('row_odd_color', None), 
+                                      pts.get('row_even_color', None)] * rows],
+                       align='left',
+                       font=dict(color=pts.get('font_cell_color', None), 
+                                 size=pts.get('font_cell_size', None))))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=0, r=0, t=0, b=0),
+        )
+
+        fig_table.show()
+
+        #display(pd_verbose.head(rows))
         
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
     if show_visualizations:
-        time_vis = vis.Vis("time",df,spark)
+        time_vis = vis.Vis("time",df,spark,rows)
 
     if verbose:
         print('\nSelecting the Product ID (ASIN), Overall Rating, and Reviewer ID from the dataset...\n')
@@ -263,21 +309,89 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
-    print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
-    # nd.show(rows, truncate=True)
     nd_pandas = nd.toPandas()
     if verbose:
-        display(nd_pandas[0:rows])
+        print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
+        # display(nd_pandas[0:rows])
+        nd_pandas = nd_pandas[0:rows]
+        
+        headerColor = 'rgb(49, 130, 189)'
+        rowEvenColor = 'rgb(239, 243, 255)'
+        rowOddColor = 'rgb(189, 215, 231)'
+
+        header_list = ["ASIN","Rating", "Reviewer ID"]
+        
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[100,50,100],
+            header=dict(values=header_list,
+                    fill_color=pts.get('header_color', None),
+                    align='left',
+                    font=dict(color=pts.get('font_header_color', None), 
+                              size=pts.get('font_header_size', None))
+                    ),
+                    cells=dict(values=[nd_pandas.asin,
+                                       nd_pandas.overall,
+                                       nd_pandas.reviewerID],
+                       fill_color = [[pts.get('row_odd_color', None), 
+                                      pts.get('row_even_color', None)] * rows],
+                       align='left',
+                       font=dict(color=pts.get('font_cell_color', None), 
+                                 size=pts.get('font_cell_size', None))))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=320, r=320, t=0, b=0),
+        )
+
+        fig_table.show()
+        
     print('\n...done!\n')
 
     print('\nShowing summary statistics for the filtered dataset...\n\n')
     overall = nd.select(nd['overall']).toPandas()
-    # print(overall.describe()) --> TODO: try overall.describe().show(), ideally convert to Pandas
     if verbose:
         print('\nShowing summary statistics for the filtered dataset...\n\n')
         logging.info('\nShowing summary statistics for the filtered dataset...\n\n')
         summary_table = overall.describe()
-        display(summary_table)
+        
+        headerColor = 'rgb(49, 130, 189)'
+        rowEvenColor = 'rgb(239, 243, 255)'
+        rowOddColor = 'rgb(189, 215, 231)'
+
+        header_list = ["Metric","Overall"]
+        
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[50,75],
+            header=dict(values=header_list,
+                    fill_color=pts.get('header_color', None),
+                    align='left',
+                    font=dict(color=pts.get('font_header_color', None), 
+                              size=pts.get('font_header_size', None))
+                    ),
+                    cells=dict(values=[['count', 
+                                        'mean', 
+                                        'std', 
+                                        'min', 
+                                        '25%', 
+                                        '50%', 
+                                        '75%', 
+                                        'max'],
+                                       summary_table.iloc[:]],
+                       fill_color = [[pts.get('row_odd_color', None), 
+                                      pts.get('row_even_color', None)] * 8],
+                       align='left',
+                       font=dict(color=pts.get('font_cell_color', None), 
+                                 size=pts.get('font_cell_size', None))))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=370, r=370, t=0, b=0),
+        )
+
+        fig_table.show()
+    
+        
+        # display(summary_table)
         print('\n...done!\n')
         logging.info('\n...done!\n')
     
@@ -293,17 +407,6 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
     print('\nConverting the Product ID (ASIN) and Reviewer ID columns into index form...\n')
 
     if verbose:
-        print('\n...done!\n')
-        logging.info('\n...done!\n')
-
-    if verbose:
-        print(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
-        logging.info(f'\nShowing the first {rows} results from the filtered dataset...\n\n')
-        pd_verbose = nd.select(df['asin'],
-                               df['overall'],
-                               df['reviewerID'])
-        pd_verbose = pd_verbose.toPandas()
-        display(pd_verbose.head(rows))
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
@@ -324,7 +427,40 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         logging.info(f'\nShowing the first {rows} results from the converted dataset...\n\n')
         pd_verbose = transformed.take(rows)
         pd_verbose = pandas.DataFrame(pd_verbose)
-        display(pd_verbose.head(rows))
+        
+        headerColor = 'rgb(49, 130, 189)'
+        rowEvenColor = 'rgb(239, 243, 255)'
+        rowOddColor = 'rgb(189, 215, 231)'
+
+        header_list = ["ASIN","Rating", "Reviewer ID", "ASIN Index", "Reviewer ID Index"]
+        
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[50,50,75, 50, 75],
+            header=dict(values=header_list,
+                    fill_color=pts.get('header_color', None),
+                    align='left',
+                    font=dict(color=pts.get('font_header_color', None), 
+                              size=pts.get('font_header_size', None))
+                    ),
+                    cells=dict(values=[pd_verbose.iloc[:, 0],
+                                       pd_verbose.iloc[:, 1],
+                                       pd_verbose.iloc[:, 2],
+                                       pd_verbose.iloc[:, 3],
+                                       pd_verbose.iloc[:, 4]],
+                       fill_color = [[pts.get('row_odd_color', None), 
+                                      pts.get('row_even_color', None)] * rows],
+                       align='left',
+                       font=dict(color=pts.get('font_cell_color', None), 
+                                 size=pts.get('font_cell_size', None))))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=180, r=180, t=0, b=0),
+        )
+
+        fig_table.show()
+        
+        # display(pd_verbose.head(rows))
         print('\n...done!\n')
         logging.info('\n...done!\n')
 
@@ -382,7 +518,41 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         logging.info(f'\nDisplaying the first {rows} predictions...\n\n')
         predictions_pandas = predictions.take(rows)
         predictions_pandas = pandas.DataFrame(predictions_pandas)
-        display(predictions_pandas.head(rows))
+        
+        headerColor = 'rgb(49, 130, 189)'
+        rowEvenColor = 'rgb(239, 243, 255)'
+        rowOddColor = 'rgb(189, 215, 231)'
+
+        header_list = ["ASIN","Rating", "Reviewer ID", "ASIN Index", "Reviewer ID Index", "Predicted Rating"]
+        
+        fig_table = go.Figure(data=[go.Table(
+            columnwidth=[50, 50, 75, 50, 75, 75],
+            header=dict(values=header_list,
+                    fill_color=pts.get('header_color', None),
+                    align='left',
+                    font=dict(color=pts.get('font_header_color', None), 
+                              size=pts.get('font_header_size', None))
+                    ),
+                    cells=dict(values=[predictions_pandas.iloc[:, 0],
+                                       predictions_pandas.iloc[:, 1],
+                                       predictions_pandas.iloc[:, 2],
+                                       predictions_pandas.iloc[:, 3],
+                                       predictions_pandas.iloc[:, 4],
+                                       predictions_pandas.iloc[:, 5]],
+                       fill_color = [[pts.get('row_odd_color', None), 
+                                      pts.get('row_even_color', None)] * rows],
+                       align='left',
+                       font=dict(color=pts.get('font_cell_color', None), 
+                                 size=pts.get('font_cell_size', None))))
+        ])
+
+        fig_table.update_layout(
+            margin=dict(l=120, r=120, t=0, b=0),
+        )
+
+        fig_table.show()
+        
+        # display(predictions_pandas.head(rows))
 
     print('\n...done!\n')
     logging.info('\n...done!\n')
@@ -400,7 +570,37 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
     # df.rename(columns={'oldName1': 'newName1', 'oldName2': 'newName2'}, inplace=True)
     pandas_recs = user_recs.take(rows)
     pandas_recs = pandas.DataFrame(pandas_recs)
-    display(pandas_recs.head(rows))
+    
+    headerColor = 'rgb(49, 130, 189)'
+    rowEvenColor = 'rgb(239, 243, 255)'
+    rowOddColor = 'rgb(189, 215, 231)'
+
+    header_list = ["Reviewer ID", "ASIN, Rating"]
+    
+    fig_table = go.Figure(data=[go.Table(
+        columnwidth=[85, 140],
+        header=dict(values=header_list,
+                fill_color=pts.get('header_color', None),
+                align='left',
+                font=dict(color=pts.get('font_header_color', None), 
+                            size=pts.get('font_header_size', None))
+                ),
+                cells=dict(values=[pandas_recs.iloc[:, 0],
+                                   pandas_recs.iloc[:, 1]],
+                    fill_color = [[pts.get('row_odd_color', None), 
+                                    pts.get('row_even_color', None)] * rows],
+                    align='left',
+                    font=dict(color=pts.get('font_cell_color', None), 
+                                size=pts.get('font_cell_size', None))))
+    ])
+
+    fig_table.update_layout(
+        margin=dict(l=340, r=340, t=0, b=0),
+    )
+
+    fig_table.show()
+    
+    # display(pandas_recs.head(rows))
     print('\n...done!')
     logging.info('\n...done!')
 
