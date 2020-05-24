@@ -69,17 +69,23 @@ class Vis:
             raise Exception("Invalid visualization type")
 
     def vis_summary(self, data):
-        # fig1, ax1 = plt.subplots()
-        # data.boxplot(ax=ax1)
-        # ax1.set_title('Ratings Summary')
-        fig1, ax1 = plt.subplots()
-        num_bins = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5]
-        data.hist(ax=ax1,bins=num_bins, edgecolor='white')
-        ax1.set_title('Ratings Distribution')
-        plt.ylabel('Review Count')
-        plt.xlabel('Ratings')
-        ax1.grid(False)
-        plt.show()
+
+        #colors = ['lightslategray',] * 5
+        dark_blue = self.plotly_table_styles.get('header_color', None)
+        light_blue = self.plotly_table_styles.get('row_odd_color', None)
+        colors = [[dark_blue,light_blue]*5]
+
+        fig = px.histogram(data, x="overall", color_discrete_sequence =colors, template = "plotly_white")
+
+        fig.update_layout(
+            title_text='Ratings Distribution',
+            xaxis_title="Ratings",
+            yaxis_title="Review Count",
+            bargap = 0.1,
+            margin=dict(l=180, r=180, t=0, b=0),
+        )
+
+        fig.show()
 
     def vis_helpful_review(self,data,spark):
 
@@ -98,16 +104,16 @@ class Vis:
         fig0 = make_subplots(rows=1, cols=2)
 
         fig0.add_trace(
-            go.Scattergl(x=df['overall'], y=df['vote'], mode='markers', name="Rating/Vote Correlation"),
+            go.Scattergl(x=df['overall'], y=df['vote'], mode='markers', name="Rating/Vote Correlation",marker_color=self.plotly_table_styles.get('header_color', None)),
             row=1, col=1
         )
 
         fig0.add_trace(
-            go.Bar(x=df['overall'], y=df['vote'], name= "Vote Disbrution Across Ratings"),
+            go.Bar(x=df['overall'], y=df['vote'], name= "Vote Disbrution Across Ratings",marker_color=self.plotly_table_styles.get('row_odd_color', None)),
             row=1, col=2
         )
 
-        fig0.update_layout(width=900,height=450,title_text="Ratings vs. Votes for Most Popular Item")
+        fig0.update_layout(width=900,height=450,title_text="Ratings vs. Votes for Most Popular Item",template="plotly_white")
 
         fig0.update_xaxes(title_text="Ratings")
         fig0.update_yaxes(title_text="Votes")
@@ -125,37 +131,52 @@ class Vis:
 
         # Add traces
         fig.add_trace(
-            go.Scattergl(x=df['reviewerID'], y=df['overall'], name="Ratings", mode='markers'),
+            go.Scattergl(x=df['reviewerID'], y=df['overall'], name="Ratings", mode='markers',marker_color=self.plotly_table_styles.get('header_color', None)),
             secondary_y=False,
         )
 
         fig.add_trace(
-            go.Scattergl(x=df['reviewerID'], y=df['vote'], name="Votes", mode='markers'),
+            go.Scattergl(x=df['reviewerID'], y=df['vote'], name="Votes", mode='markers',marker_color='rgb(220, 0, 0)'),
             secondary_y=True,
         )
 
         # Add figure title
         fig.update_layout(
-            title_text="Ratings/Votes Correlation"
+            title_text="Ratings and Votes Concentration for Most Popular Item",
+            template="plotly_white"
         )
 
         # Set x-axis title
-        fig.update_xaxes(title_text="Reviews")
+        fig.update_xaxes(title_text="Reviewer IDs")
 
         # Set y-axes titles
-        fig.update_yaxes(title_text="<b>Ratings</b>", secondary_y=False)
-        fig.update_yaxes(title_text="<b>Votes</b>", secondary_y=True)
+        fig.update_yaxes(title_text="Ratings", secondary_y=False)
+        fig.update_yaxes(title_text="Votes", secondary_y=True)
 
         fig.show()
         
     def vis_prediction(self, data):
         df = data.select(data['overall'], data['prediction']).toPandas()
         print("\nPlotting visualizations...")
-        fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl')
+
+        dark_blue = self.plotly_table_styles.get('header_color', None)
+        light_blue = self.plotly_table_styles.get('row_odd_color', None)
+
+        colors_cor = [dark_blue]*len(df)
+        fig = px.scatter(df, x="overall", y="prediction", width=400, height=400,render_mode='webgl', color_discrete_sequence=colors_cor, template = "plotly_white")
+        
+        fig.update_layout(
+            title={
+                'text': "Predicted vs. Actual Ratings Correlation"},
+            xaxis_title="Actual",
+            yaxis_title="Predicted")
+        
         fig.show()
 
+        colors = [[dark_blue,light_blue]*len(df)]
+
         df['error'] = df['prediction'] - df['overall']
-        fig2 = px.histogram(df, x="error")
+        fig2 = px.histogram(df, x="error",template="plotly_white",color_discrete_sequence=colors)
         fig2.update_layout(
             bargap=0.1,
             title={
@@ -163,7 +184,9 @@ class Vis:
                 'y':0.98,
                 'x':0.5,
                 'xanchor': 'center',
-                'yanchor': 'top'})
+                'yanchor': 'top'},
+            xaxis_title="Error",
+            yaxis_title="Prediction Count")
         fig2.show()
 
     def vis_timeseries(self, data, spark,rows):
@@ -198,7 +221,7 @@ class Vis:
         ])
 
         fig_table.update_layout(
-            margin=dict(l=320, r=320, t=0, b=0),
+            margin=dict(l=370, r=370, t=0, b=0),
         )
 
         fig_table.show()
@@ -222,6 +245,15 @@ class Vis:
         # Convert date string to pyspark date type
         df_pandas['Review Date'] = pandas.to_datetime(df_pandas['Review Date'], unit='s')
 
+        blue = self.plotly_table_styles.get('header_color', None)
+        colors = ["rgb(49, 130, 189)"]*len(df_pandas)
+        ######
+        # fig = px.bar(df, 
+        #      x='x', y='y', 
+        #      color_discrete_sequence =['green']*len(df),
+        #      title=title,
+        #      labels={'x': 'Some X', 'y':'Some Y'})
+        #############
         # Display ploty time series line graph
-        fig = px.line(df_pandas, x="Review Date", y="Review Count", title='Popularity Over Time for the Most Popular Item')
+        fig = px.line(df_pandas, x="Review Date", y="Review Count", title='Popularity Over Time for the Most Popular Item',color_discrete_sequence = colors, template ="plotly_white")
         fig.show()
