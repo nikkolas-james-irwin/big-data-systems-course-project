@@ -263,7 +263,7 @@ def run_spark_jobs(dataset=None, num_predictions=None, rows=None, show_visualiza
         header_list = ["ASIN","Rating","Review Text","Review Time","Reviewer ID","Reviewer Name","Summary","Verified","Vote"]
 
         fig_table = go.Figure(data=[go.Table(
-            columnwidth=[75,50,150,85,100,100,90,50,40],
+            columnwidth=[65,45,175,80,95,95,100,50,35],
             header=dict(values=header_list,
                     fill_color=pts.get('header_color', None),
                     align='left',
