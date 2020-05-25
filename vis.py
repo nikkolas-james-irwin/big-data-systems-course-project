@@ -82,7 +82,7 @@ class Vis:
             xaxis_title="Ratings",
             yaxis_title="Review Count",
             bargap = 0.1,
-            margin=dict(l=180, r=180, t=0, b=0),
+            margin=dict(l=240, r=240, t=120, b=0),
         )
 
         fig.show()
