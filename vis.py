@@ -143,7 +143,7 @@ class Vis:
 
         # Add figure title
         fig.update_layout(
-            title_text="Ratings and Votes Concentration for Most Popular Item",
+            title_text="Ratings and Votes Concentrations for the Most Popular Item",
             title_x=0.5,
             template="plotly_white"
         )
