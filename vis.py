@@ -78,7 +78,8 @@ class Vis:
         fig = px.histogram(data, x="overall", color_discrete_sequence =colors, template = "plotly_white")
 
         fig.update_layout(
-            title_text='Ratings Distribution',
+            title_text='Ratings Distribution', 
+            title_x=0.5,
             xaxis_title="Ratings",
             yaxis_title="Review Count",
             bargap = 0.1,
@@ -113,7 +114,7 @@ class Vis:
             row=1, col=2
         )
 
-        fig0.update_layout(width=900,height=450,title_text="Ratings vs. Votes for Most Popular Item",template="plotly_white")
+        fig0.update_layout(width=900,height=450,title_text="Ratings vs. Votes for Most Popular Item",title_x=0.5,template="plotly_white")
 
         fig0.update_xaxes(title_text="Ratings")
         fig0.update_yaxes(title_text="Votes")
@@ -143,6 +144,7 @@ class Vis:
         # Add figure title
         fig.update_layout(
             title_text="Ratings and Votes Concentration for Most Popular Item",
+            title_x=0.5,
             template="plotly_white"
         )
 
@@ -168,6 +170,7 @@ class Vis:
         fig.update_layout(
             title={
                 'text': "Predicted vs. Actual Ratings Correlation"},
+            title_x=0.5,
             xaxis_title="Actual",
             yaxis_title="Predicted")
         
@@ -185,6 +188,7 @@ class Vis:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
+            title_x=0.5,
             xaxis_title="Error",
             yaxis_title="Prediction Count")
         fig2.show()
@@ -256,4 +260,5 @@ class Vis:
         #############
         # Display ploty time series line graph
         fig = px.line(df_pandas, x="Review Date", y="Review Count", title='Popularity Over Time for the Most Popular Item',color_discrete_sequence = colors, template ="plotly_white")
+        fig.update_layout(title_x=0.5)
         fig.show()
