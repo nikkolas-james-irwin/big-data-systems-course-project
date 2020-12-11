@@ -33,7 +33,7 @@ Our goals are broken down in the bulleted-list below. This list it not exhaustiv
 
 ### Team Members
 
-**Responsibilities** - Our team split responsibilities into two main areas described below. While the sections below describe the primary work performed by each team member, we still helped each other where possible across areas as time permitted.
+**Responsibilities** - Our team split responsibilities into two main areas described below. While the sections below describe the primary work performed by each team member, (note: we still helped each other where possible across areas as time permitted).
 
 #### PySpark Implementation and Data Visualization
 
