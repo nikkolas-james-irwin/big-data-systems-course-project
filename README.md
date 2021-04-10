@@ -15,8 +15,8 @@
 * **College:** [College of Engineering](https://www.unr.edu/engineering)
 * **Department:** [Computer Science and Engineering Department](https://www.unr.edu/cse)
 * **Instructor:** Dr. Feng Yan, [Faculty Webpage](https://www.unr.edu/cse/people/feng-yan)
-* **Course:** CS 636 - Big Data Systems
-  * This course offers an advanced study of state-of-the-art big data techniques and applications and focuses on the tools and systems for big data analytics.
+* **Topic:** Big Data Systems
+  * Tools and systems for big data analytics.
 
 ### Project Goals
 
@@ -149,3 +149,16 @@ optional arguments:
 available datasets:
   -f <filename>.json, --file <filename>.json                      available files are shown below
 ```
+
+### Detailed Demonstrations
+Docker Image Build, Volume Mount and Container Deployment
+https://www.youtube.com/watch?v=kxGlhyopxac&t=3s
+
+Get Jupyter Notebook from Docker Container
+https://www.youtube.com/watch?v=mqn--XZsDBY&t=2s
+
+Example Run Using Software 5-Core Data Set
+https://www.youtube.com/watch?v=CaJBRXY2iLs
+
+Additional Run with Video Game 5-Core Data Set Focusing on Visualizations
+https://www.youtube.com/watch?v=pWcY1yUThbI
