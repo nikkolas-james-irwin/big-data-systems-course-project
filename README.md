@@ -150,15 +150,12 @@ available datasets:
   -f <filename>.json, --file <filename>.json                      available files are shown below
 ```
 
+
 ### Detailed Demonstrations
-Docker Image Build, Volume Mount and Container Deployment
-https://www.youtube.com/watch?v=kxGlhyopxac&t=3s
+* Docker Image Build, Volume Mount and Container Deployment: https://www.youtube.com/watch?v=kxGlhyopxac&t=3s
 
-Get Jupyter Notebook from Docker Container
-https://www.youtube.com/watch?v=mqn--XZsDBY&t=2s
+* Get Jupyter Notebook from Docker Container: https://www.youtube.com/watch?v=mqn--XZsDBY&t=2s
 
-Example Run Using Software 5-Core Data Set
-https://www.youtube.com/watch?v=CaJBRXY2iLs
+* Example Run Using Software 5-Core Data Set: https://www.youtube.com/watch?v=CaJBRXY2iLs
 
-Additional Run with Video Game 5-Core Data Set Focusing on Visualizations
-https://www.youtube.com/watch?v=pWcY1yUThbI
+* Additional Run with Video Game 5-Core Data Set Focusing on Visualizations: https://www.youtube.com/watch?v=pWcY1yUThbI
